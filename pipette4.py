@@ -391,10 +391,18 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
         if len(non_default_entries_corn_syrup_p200_tm1) > 0:
             mean_weight = np.mean(non_default_entries_corn_syrup_p200_tm1)
             std_weight = np.std(non_default_entries_corn_syrup_p200_tm1)
-            percent_error = (abs(mean_weight - corn_syrup_targets[pipette_type_tm1_cs]) / corn_syrup_targets[pipette_type_tm1_cs]) * 100
+            # Removed percent_error calculation for corn syrup
             st.write(f"**Average measured weight (TM1):** {mean_weight:.3f} g")
             st.write(f"**Standard deviation (TM1):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM1):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
+
+            # Tiered feedback based on standard deviation
+            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
+                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
+            elif std_weight <= 0.020:
+                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
+            else:
+                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
+
 
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.bar(range(1, len(non_default_entries_corn_syrup_p200_tm1) + 1), non_default_entries_corn_syrup_p200_tm1, color='orange')
@@ -410,7 +418,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
             plt.close(fig)
             data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_mean"] = mean_weight
             data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_std"] = std_weight
-            data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_percent_error"] = percent_error
+            # data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_percent_error"] = percent_error # Removed from data for CSV
         else:
             st.info("Enter measurements for Team Member 1 (P200, Corn Syrup) to see calculations and plot.")
 
@@ -429,10 +437,17 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
         if len(non_default_entries_corn_syrup_p200_tm2) > 0:
             mean_weight = np.mean(non_default_entries_corn_syrup_p200_tm2)
             std_weight = np.std(non_default_entries_corn_syrup_p200_tm2)
-            percent_error = (abs(mean_weight - corn_syrup_targets[pipette_type_tm2_cs]) / corn_syrup_targets[pipette_type_tm2_cs]) * 100
+            # Removed percent_error calculation for corn syrup
             st.write(f"**Average measured weight (TM2):** {mean_weight:.3f} g")
             st.write(f"**Standard deviation (TM2):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM2):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
+
+            # Tiered feedback based on standard deviation
+            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
+                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
+            elif std_weight <= 0.020:
+                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
+            else:
+                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
 
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.bar(range(1, len(non_default_entries_corn_syrup_p200_tm2) + 1), non_default_entries_corn_syrup_p200_tm2, color='orange')
@@ -448,7 +463,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
             plt.close(fig)
             data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_mean"] = mean_weight
             data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_std"] = std_weight
-            data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_percent_error"] = percent_error
+            # data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_percent_error"] = percent_error # Removed from data for CSV
         else:
             st.info("Enter measurements for Team Member 2 (P200, Corn Syrup) to see calculations and plot.")
 
@@ -467,10 +482,17 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
         if len(non_default_entries_corn_syrup_p1000_tm3) > 0:
             mean_weight = np.mean(non_default_entries_corn_syrup_p1000_tm3)
             std_weight = np.std(non_default_entries_corn_syrup_p1000_tm3)
-            percent_error = (abs(mean_weight - corn_syrup_targets[pipette_type_tm3_cs]) / corn_syrup_targets[pipette_type_tm3_cs]) * 100
+            # Removed percent_error calculation for corn syrup
             st.write(f"**Average measured weight (TM3):** {mean_weight:.3f} g")
             st.write(f"**Standard deviation (TM3):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM3):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
+
+            # Tiered feedback based on standard deviation
+            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
+                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
+            elif std_weight <= 0.020:
+                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
+            else:
+                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
 
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.bar(range(1, len(non_default_entries_corn_syrup_p1000_tm3) + 1), non_default_entries_corn_syrup_p1000_tm3, color='orange')
@@ -486,7 +508,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
             plt.close(fig)
             data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_mean"] = mean_weight
             data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_std"] = std_weight
-            data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_percent_error"] = percent_error
+            # data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_percent_error"] = percent_error # Removed from data for CSV
         else:
             st.info("Enter measurements for Team Member 3 (P1000, Corn Syrup) to see calculations and plot.")
 
@@ -502,7 +524,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
             # Prepare DataFrame for CSV Export
             results_data = []
 
-            # Water Results
+            # Water Results (These still include Percent Error)
             results_data.append({
                 "Team Name": team_name,
                 "Pipette": "P200 (TM1)",
@@ -528,14 +550,14 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
                 "Percent Error": data.get("water_P1000_TM3_percent_error", np.nan)
             })
 
-            # Corn Syrup Results
+            # Corn Syrup Results (These now only include Mean and Std Dev)
             results_data.append({
                 "Team Name": team_name,
                 "Pipette": "P200 (TM1)",
                 "Liquid": "Corn Syrup",
                 "Mean (g)": data.get("corn_syrup_P200_TM1_mean", np.nan),
                 "Std Dev (g)": data.get("corn_syrup_P200_TM1_std", np.nan),
-                "Percent Error": data.get("corn_syrup_P200_TM1_percent_error", np.nan)
+                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
             })
             results_data.append({
                 "Team Name": team_name,
@@ -543,7 +565,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
                 "Liquid": "Corn Syrup",
                 "Mean (g)": data.get("corn_syrup_P200_TM2_mean", np.nan),
                 "Std Dev (g)": data.get("corn_syrup_P200_TM2_std", np.nan),
-                "Percent Error": data.get("corn_syrup_P200_TM2_percent_error", np.nan)
+                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
             })
             results_data.append({
                 "Team Name": team_name,
@@ -551,9 +573,8 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
                 "Liquid": "Corn Syrup",
                 "Mean (g)": data.get("corn_syrup_P1000_TM3_mean", np.nan),
                 "Std Dev (g)": data.get("corn_syrup_P1000_TM3_std", np.nan),
-                "Percent Error": data.get("corn_syrup_P1000_TM3_percent_error", np.nan)
+                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
             })
-
 
             results_df = pd.DataFrame(results_data)
 
