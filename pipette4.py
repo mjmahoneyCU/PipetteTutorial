@@ -56,25 +56,106 @@ h2, h3 {
 </div>
 """, unsafe_allow_html=True)
 
+
+# --- REUSABLE FUNCTION FOR PRACTICE BLOCKS ---
+def pipette_practice_block(team_member, pipette_type, liquid, target_grams, bar_color, data_dict):
+    """Render one pipetting practice block and update the shared data dictionary."""
+    if liquid == "Water":
+        target_uL = int(target_grams * 1000)
+    else:
+        target_uL = int(target_grams * 1000 / 1.38)
+
+    st.subheader(f"{pipette_type} Practice with {liquid} — Team Member {team_member}")
+    st.caption(f"Target volume: {target_uL} µL  |  Expected weight: {target_grams:.3f} g")
+
+    key_prefix = f"{liquid.lower().replace(' ', '_')}_{pipette_type}_TM{team_member}"
+    entries = []
+    cols = st.columns(5)
+    for i, col in enumerate(cols, 1):
+        with col:
+            weight = st.number_input(
+                f"Trial {i}",
+                min_value=0.0, max_value=2.0, step=0.001,
+                format="%.3f",
+                key=f"{key_prefix}_weight_{i}"
+            )
+            entries.append(weight)
+
+    valid = np.array([e for e in entries if e > 0])
+    if len(valid) == 0:
+        st.info("Enter measurements above to see your results.")
+        st.markdown("---")
+        return
+
+    mean = np.mean(valid)
+    std = np.std(valid)
+
+    metric_cols = st.columns(3)
+    metric_cols[0].metric("Mean", f"{mean:.3f} g")
+    metric_cols[1].metric("Std Dev", f"{std:.3f} g")
+
+    if liquid == "Water":
+        pct_err = abs(mean - target_grams) / target_grams * 100
+        metric_cols[2].metric("Percent Error", f"{pct_err:.1f}%")
+
+        if pct_err <= 3:
+            st.success("Within professional tolerance — excellent accuracy.")
+        elif pct_err <= 10:
+            st.info("Accurate for lab practice. In a real experiment, you'd want to tighten this further.")
+        else:
+            st.warning("Accuracy is off — review your technique and try again.")
+
+        data_dict[f"{key_prefix}_percent_error"] = pct_err
+    else:
+        metric_cols[2].metric("Target", f"{target_grams:.3f} g")
+
+        if std <= 0.005:
+            st.success("Outstanding consistency.")
+        elif std <= 0.020:
+            st.info("Good consistency. Keep your pace slow and steady.")
+        else:
+            st.warning("High variability — focus on a consistent aspiration and dispense speed.")
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    ax.bar(range(1, len(valid) + 1), valid, color=bar_color, edgecolor='#333333', linewidth=0.5)
+    ax.axhline(mean, color='#D62728', linestyle='--', linewidth=1.5, label=f'Your mean ({mean:.3f} g)')
+    ax.axhline(target_grams, color='#2CA02C', linestyle=':', linewidth=1.5, label=f'Target ({target_grams:.3f} g)')
+    ax.set_xlabel("Trial", fontsize=10)
+    ax.set_ylabel("Measured weight (g)", fontsize=10)
+    ax.set_ylim(bottom=0)
+    ax.legend(loc='upper right', fontsize=9, framealpha=0.95)
+    ax.grid(axis='y', linestyle=':', alpha=0.4)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    st.pyplot(fig)
+    plt.close(fig)
+
+    data_dict[f"{key_prefix}_mean"] = mean
+    data_dict[f"{key_prefix}_std"] = std
+    st.markdown("---")
+
+
 # --- STUDENT NAME ---
 team_name = st.text_input("Enter your team name to track your progress:")
 if team_name:
     st.success(f"Welcome Team {team_name}! Let's master pipetting.")
 
     tabs = st.tabs([
-        "Intro", "Parts of Pipette", "Set Volume", "Attach Tip", "Draw Liquid",
-        "Dispense Liquid", "Viscous Solutions", "Common Errors", "Practice & Reflection"
+        "Introduction", "Pipette Anatomy", "Setting Volume", "Attaching Tips",
+        "Drawing Liquid", "Dispensing", "Viscous Solutions", "Common Errors",
+        "Practice & Reflection"
     ])
 
     with tabs[0]:
-        st.header("📘 Introduction to Pipetting")
+        st.header("Introduction to Pipetting")
         st.markdown("""
-Micropipettes allow scientists to transfer tiny liquid volumes precisely — critical for every biotech lab!
+Micropipettes allow scientists to transfer tiny liquid volumes precisely — critical for every biotech lab.
 Today, you will learn **how to pipette accurately**, fix common mistakes, and test your skills.
 """)
 
     with tabs[1]:
-        st.header("🔩 Parts of a Micropipette")
+        st.header("Parts of a Micropipette")
         st.markdown("""
 - **Plunger** (pushes and releases liquid)
 - **Volume adjustment dial**
@@ -82,15 +163,15 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
 - **Tip ejector button**
 - **Shaft** (where the tip fits)
 """)
-        st.info("💡 **Take a moment to locate each part on the actual micropipette at your bench.**")
+        st.info("Take a moment to locate each part on the actual micropipette at your bench.")
         col1, col2 = st.columns(2)
         with col1:
-            st.image("pipettor.png", caption="Labeled micropipette", use_container_width=True)
+            st.image("pipettor.png", caption="Labeled micropipette", width="stretch")
         with col2:
-            st.image("pipette_box.png", use_container_width=True)
+            st.image("pipette_box.png", width="stretch")
 
     with tabs[2]:
-        st.header("🎯 Setting the Volume")
+        st.header("Setting the Volume")
         st.markdown("""
 - Turn the dial clockwise to decrease, counterclockwise to increase.
 - Always stay within the correct range for each pipette:
@@ -99,41 +180,33 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
   - P1000: 100–1000 µL
 - Rotate slightly past your volume, then dial back for best accuracy.
 """)
-        st.image("pipette_volumes.png", caption="Pipette volume settings", use_container_width=True)
+        st.image("pipette_volumes.png", caption="Pipette volume settings", width="stretch")
 
-        st.subheader("🧠 Match the Pipette Display to the Correct Volume:")
+        st.subheader("Match the Pipette Display to the Correct Volume")
         volume_options = ["Select", "2 µL", "10 µL", "20 µL", "80 µL", "100 µL", "200 µL", "800 µL"]
+        correct_answers = {"A": "800 µL", "B": "200 µL", "C": "100 µL", "D": "2 µL"}
 
-        pipetteA = st.selectbox("Pipette A:", volume_options, index=0, key="pipetteA_q")
-        pipetteB = st.selectbox("Pipette B:", volume_options, index=0, key="pipetteB_q")
-        pipetteC = st.selectbox("Pipette C:", volume_options, index=0, key="pipetteC_q")
-        pipetteD = st.selectbox("Pipette D:", volume_options, index=0, key="pipetteD_q")
+        selections = {}
+        for label in ["A", "B", "C", "D"]:
+            selections[label] = st.selectbox(f"Pipette {label}:", volume_options, index=0, key=f"pipette{label}_q")
 
         if st.button("Check My Matching Answers", key="check_matching_btn"):
-            correct_answers = {
-                "pipetteA_q": "800 µL",
-                "pipetteB_q": "200 µL",
-                "pipetteC_q": "100 µL",
-                "pipetteD_q": "2 µL"
-            }
-
-            for key, label in zip(["pipetteA_q", "pipetteB_q", "pipetteC_q", "pipetteD_q"], ["A", "B", "C", "D"]):
-                selection = locals()[f"pipette{label}"]
-                if selection == correct_answers[key]:
-                    st.success(f"Pipette {label}: Correct! ✅")
+            for label in ["A", "B", "C", "D"]:
+                if selections[label] == correct_answers[label]:
+                    st.success(f"Pipette {label}: Correct.")
                 else:
-                    st.warning(f"Pipette {label}: Incorrect. Please try again! 🤔")
-
+                    st.warning(f"Pipette {label}: Not quite — try again.")
             st.markdown("---")
 
-        answer1 = st.radio("Which pipette would you use for 150 µL?", ["P20", "P200", "P1000"], index=None, key="volume_check")
+        answer1 = st.radio("Which pipette would you use for 150 µL?",
+                           ["P20", "P200", "P1000"], index=None, key="volume_check")
         if answer1 == "P200":
-            st.success("Correct! P200 (20–200 µL) is the right choice for 150 µL. ✅")
+            st.success("Correct. P200 (20–200 µL) is the right choice for 150 µL.")
         elif answer1:
-            st.warning("Not quite. That pipette's range doesn't cover 150 µL. Please try again! 🤔")
+            st.warning("Not quite. That pipette's range doesn't cover 150 µL. Try again.")
 
     with tabs[3]:
-        st.header("🧪 Attaching the Tip")
+        st.header("Attaching the Tip")
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
@@ -143,24 +216,19 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
   - Blue for P1000
 - Listen for a soft 'click' to confirm attachment.
 
-✍️ **Now practice adding tips to your pipettes at your bench.**
+**Now practice adding tips to your pipettes at your bench.**
 """)
         with col2:
-            youtube_attach_url = "https://youtu.be/CJWCM9kM-YE"
-            video_id = youtube_attach_url.split("youtu.be/")[-1]
+            video_id = "CJWCM9kM-YE"
             embed_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&loop=1&playlist={video_id}&controls=0&modestbranding=1"
             components.html(
-                f"""
-                <iframe width="100%" height="315"
-                    src="{embed_url}"
-                    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-                </iframe>
-                """,
+                f"""<iframe width="100%" height="315" src="{embed_url}"
+                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>""",
                 height=320,
             )
 
     with tabs[4]:
-        st.header("💧 Drawing Liquid")
+        st.header("Drawing Liquid")
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
@@ -168,475 +236,169 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
 - Insert the tip just 2–3 mm below the liquid surface.
 - Release the plunger slowly to draw liquid without bubbles.
 
-✍️ **Practice drawing up liquid into your pipette. Watch for bubbles!**
+**Practice drawing up liquid into your pipette. Watch for bubbles.**
 """)
         with col2:
-            youtube_draw_url = "https://youtu.be/TAsEXBQZqzo"
-            video_id = youtube_draw_url.split("youtu.be/")[-1]
+            video_id = "TAsEXBQZqzo"
             embed_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&loop=1&playlist={video_id}&controls=0&modestbranding=1"
             components.html(
-                f"""
-                <iframe width="100%" height="315"
-                    src="{embed_url}"
-                    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-                </iframe>
-                """,
+                f"""<iframe width="100%" height="315" src="{embed_url}"
+                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>""",
                 height=320,
             )
 
-        answer2 = st.radio("Which stop do you press to when drawing liquid?", ["First Stop", "Second Stop"], index=None, key="draw_check")
+        answer2 = st.radio("Which stop do you press to when drawing liquid?",
+                           ["First Stop", "Second Stop"], index=None, key="draw_check")
         if answer2 == "First Stop":
-            st.success("Correct! The first stop is for drawing liquid, ensuring you only aspirate the set volume. ✅")
+            st.success("Correct. The first stop aspirates only the set volume.")
         elif answer2:
-            st.warning("Not quite. Pressing to the second stop before drawing will lead to an incorrect (too large) volume. 🤔")
+            st.warning("Not quite. Pressing to the second stop before drawing will pull up too much liquid.")
 
     with tabs[5]:
-        st.header("⚡ Dispensing Liquid")
+        st.header("Dispensing Liquid")
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
 - Press gently to the **first stop**.
 - Press to the **second stop** to eject the final drop.
-- Remove tip while still pressing down.
+- Remove the tip while still pressing down.
 
-✍️ **Now practice dispensing the liquid you just drew up.**
+**Practice dispensing the liquid you just drew up.**
 """)
         with col2:
-            youtube_expel_url = "https://youtu.be/tF6XdJbuHZY"
-            video_id = youtube_expel_url.split("youtu.be/")[-1]
+            video_id = "tF6XdJbuHZY"
             embed_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&loop=1&playlist={video_id}&controls=0&modestbranding=1"
             components.html(
-                f"""
-                <iframe width="100%" height="315"
-                    src="{embed_url}"
-                    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-                </iframe>
-                """,
+                f"""<iframe width="100%" height="315" src="{embed_url}"
+                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>""",
                 height=320,
             )
 
-        answer3 = st.radio("Which stop do you press to when fully dispensing?", ["First Stop", "Second Stop"], index=None, key="dispense_check")
+        answer3 = st.radio("Which stop do you press to when fully dispensing?",
+                           ["First Stop", "Second Stop"], index=None, key="dispense_check")
         if answer3 == "Second Stop":
-            st.success("Correct! Pressing to the second stop ensures all liquid, including the last drop, is dispensed. ✅")
+            st.success("Correct. The second stop ejects every last drop.")
         elif answer3:
-            st.warning("Not quite. You need to press further to dispense completely and accurately. 🤔")
+            st.warning("Not quite. You need to press further to fully dispense.")
 
     with tabs[6]:
-        st.header("🧴 Handling Viscous Solutions")
+        st.header("Handling Viscous Solutions")
         st.markdown("""
 - Pre-wet the tip before aspirating.
 - Aspirate and dispense **slowly**.
-- Be patient — viscous liquids move slower than water!
+- Be patient — viscous liquids move slower than water.
 
-✍️ **Try pipetting the corn syrup you've been provided. Be slow and steady.**
+**Try pipetting the corn syrup you've been provided. Be slow and steady.**
 """)
-        answer4 = st.radio("When pipetting viscous liquids, should you pipette faster or slower?", ["Faster", "Slower"], index=None, key="viscous_check")
+        answer4 = st.radio("When pipetting viscous liquids, should you pipette faster or slower?",
+                           ["Faster", "Slower"], index=None, key="viscous_check")
         if answer4 == "Slower":
-            st.success("Correct! Slower aspiration and dispensing are essential for viscous solutions to ensure accuracy and prevent bubbles. ✅")
+            st.success("Correct. Slower aspiration keeps volumes accurate and prevents bubbles.")
         elif answer4:
-            st.warning("Not quite. Viscous liquids need more time to move through the tip due to their thickness. Please try again! 🤔")
+            st.warning("Not quite. Viscous liquids need more time to move through the tip.")
 
     with tabs[7]:
-        st.header("🚨 Common Pipetting Mistakes")
+        st.header("Common Pipetting Mistakes")
         st.markdown("""
-- Pressing to second stop before drawing = too much volume
-- Letting go too fast = air bubbles
-- Pipetting at wrong angle = inaccurate volume
-- Not changing tips = contamination
+- Pressing to the second stop before drawing → too much volume
+- Letting go too fast → air bubbles
+- Pipetting at the wrong angle → inaccurate volume
+- Not changing tips → contamination
 """)
-        mistakes = st.checkbox("✅ I understand how to avoid common pipetting mistakes!")
 
     with tabs[8]:
-        st.header("🏋️ Practice Challenge + Reflection")
+        st.header("Practice Challenge + Reflection")
 
-        st.info("""
-        **Remember: Converting Volume to Weight**
+        with st.expander("Converting Volume to Weight (reference)"):
+            st.markdown("""
+**Water** has a density of **1 g/mL**, which is the same as **1 mg/µL**. So 1 µL of water weighs about 1 mg (0.001 g).
 
-        - Remember that **1 mL is also equal to 1000 microliters (µL)**.
-        - Water has a density of **1 gram per milliliter (g/mL)**.
-        
-        - One gram is equal to 1000 milligrams and 1 milliliter is equal to 1000 microliters (µL).
-        - That means you can also express the density of water as 1 mg per µL.
-        - That means **1 microliter (µL)** of water weighs about **1 milligram (mg)** or **0.001 grams (g)**.
-        
-        - **Corn syrup has a density of approximately 1.38 g/mL (or 1.38 mg/µL)**.
+**Corn syrup** has a density of approximately **1.38 g/mL** (or 1.38 mg/µL).
 
-        ✍️ **So:**
-        - **For Water:**
-        - 100 µL = 100 mg = 0.100 g
-        - 10 µL = 10 mg = 0.010 g
-        - 1000 µL = 1000 mg = 1.000 g
-        
-        - **For Corn Syrup (approximate):**
-        - 100 µL ≈ 138 mg ≈ 0.138 g
-        - 10 µL ≈ 13.8 mg ≈ 0.0138 g
-        - 1000 µL ≈ 1380 mg ≈ 1.380 g
-        """)
+| Volume | Water weight | Corn syrup weight |
+|---|---|---|
+| 10 µL | 0.010 g | 0.014 g |
+| 100 µL | 0.100 g | 0.138 g |
+| 1000 µL | 1.000 g | 1.380 g |
+""")
 
-        st.markdown("---")
-        st.subheader("📊 Your Pipetting Performance:")
-        st.markdown("""
-        **Understanding Percent Error:**
+        with st.expander("Understanding Your Results"):
+            st.markdown("**Percent Error — how close your average is to the true value.**")
+            st.latex(r" \text{Percent Error} = \frac{|\text{Measured} - \text{True}|}{\text{True}} \times 100\% ")
+            st.markdown("""
+- Below **3%** → within professional tolerance
+- 3–10% → accurate for practice, not for a real experiment
+- Above 10% → review your technique
 
-        Percent error tells you how close your measured value is to the true (target) value. It helps you understand the accuracy of your pipetting.
-        """)
+**Standard Deviation — how consistent your measurements are.**
 
-        st.latex(r" \text{Percent Error} = \frac{|\text{Measured Value} - \text{True Value}|}{\text{True Value}} \times 100\% ")
-
-        st.markdown("""
-        For pipetting, your 'Measured Value' is the average weight you get from your trials, and your 'True Value' is the target weight (converted from your target volume).
-
-        **What’s a good percent error?**
-        - Below **15%** = Excellent accuracy! ✅
-        - Above **15%** = Let’s work on it! ❌
-
-        ---
-
-        **Standard Deviation:**
-        - Tells us how spread out your measurements are.
-        - A small value means your pipetting is consistent.
-        - A large value means some trials are way off — try to be more steady and repeatable.
-        """)
-
-        st.markdown("---")  # Separator after the explanation block for clarity
-
-        # Define targets here, only for the relevant pipettes
-        water_targets = {"P200": 0.100, "P1000": 1.000}  # in grams for water
-        corn_syrup_targets = {"P200": 0.138, "P1000": 1.380}  # in grams for corn syrup (using 1.38 g/mL density)
-        data = {} # Dictionary to store all calculated results
-
-        # --- Water Measurements ---
-        st.subheader("💧 Water Measurements")
-
-        # P200 Team Member 1 - Water
-        pipette_type_tm1 = "P200"
-        st.subheader(f"P200 Practice with Water - Team Member 1 - Target Volume: {int(water_targets[pipette_type_tm1] * 1000)} µL")
-        st.markdown(f"*(Expected weight: {water_targets[pipette_type_tm1]:.3f} g)*")
-        entries_water_p200_tm1 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Water P200 Entry {i} (g) - TM1", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"water_{pipette_type_tm1}_TM1_weight_{i}")
-            entries_water_p200_tm1.append(weight)
-
-        non_default_entries_water_p200_tm1 = np.array(entries_water_p200_tm1)[np.array(entries_water_p200_tm1) != 0.0]
-        if len(non_default_entries_water_p200_tm1) > 0:
-            mean_weight = np.mean(non_default_entries_water_p200_tm1)
-            std_weight = np.std(non_default_entries_water_p200_tm1)
-            percent_error = (abs(mean_weight - water_targets[pipette_type_tm1]) / water_targets[pipette_type_tm1]) * 100
-            st.write(f"**Average measured weight (TM1):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM1):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM1):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
-
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_water_p200_tm1) + 1), non_default_entries_water_p200_tm1, color='skyblue')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(water_targets[pipette_type_tm1], color='g', linestyle=':', label=f'Target ({water_targets[pipette_type_tm1]:.3f}g)')
-            ax.set_title(f"P200 Weights (Water, TM1, Target {int(water_targets[pipette_type_tm1]*1000)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"water_{pipette_type_tm1}_TM1_mean"] = mean_weight
-            data[f"water_{pipette_type_tm1}_TM1_std"] = std_weight
-            data[f"water_{pipette_type_tm1}_TM1_percent_error"] = percent_error
-        else:
-            st.info("Enter measurements for Team Member 1 (P200, Water) to see calculations and plot.")
+A small value means your pipetting is consistent from trial to trial. A large value means your trials are scattered — try to be more steady and repeatable.
+""")
 
         st.markdown("---")
 
-        # P200 Team Member 2 - Water
-        pipette_type_tm2 = "P200"
-        st.subheader(f"P200 Practice with Water - Team Member 2 - Target Volume: {int(water_targets[pipette_type_tm2] * 1000)} µL")
-        st.markdown(f"*(Expected weight: {water_targets[pipette_type_tm2]:.3f} g)*")
-        entries_water_p200_tm2 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Water P200 Entry {i} (g) - TM2", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"water_{pipette_type_tm2}_TM2_weight_{i}")
-            entries_water_p200_tm2.append(weight)
+        # Colors and targets
+        water_color = "#4A90E2"
+        cornsyrup_color = "#CFB87C"
+        water_targets = {"P200": 0.100, "P1000": 1.000}
+        corn_syrup_targets = {"P200": 0.138, "P1000": 1.380}
+        data = {}
 
-        non_default_entries_water_p200_tm2 = np.array(entries_water_p200_tm2)[np.array(entries_water_p200_tm2) != 0.0]
-        if len(non_default_entries_water_p200_tm2) > 0:
-            mean_weight = np.mean(non_default_entries_water_p200_tm2)
-            std_weight = np.std(non_default_entries_water_p200_tm2)
-            percent_error = (abs(mean_weight - water_targets[pipette_type_tm2]) / water_targets[pipette_type_tm2]) * 100
-            st.write(f"**Average measured weight (TM2):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM2):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM2):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
+        st.header("Water Measurements")
+        pipette_practice_block(1, "P200", "Water", water_targets["P200"], water_color, data)
+        pipette_practice_block(2, "P200", "Water", water_targets["P200"], water_color, data)
+        pipette_practice_block(3, "P1000", "Water", water_targets["P1000"], water_color, data)
 
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_water_p200_tm2) + 1), non_default_entries_water_p200_tm2, color='skyblue')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(water_targets[pipette_type_tm2], color='g', linestyle=':', label=f'Target ({water_targets[pipette_type_tm2]:.3f}g)')
-            ax.set_title(f"P200 Weights (Water, TM2, Target {int(water_targets[pipette_type_tm2]*1000)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"water_{pipette_type_tm2}_TM2_mean"] = mean_weight
-            data[f"water_{pipette_type_tm2}_TM2_std"] = std_weight
-            data[f"water_{pipette_type_tm2}_TM2_percent_error"] = percent_error
-        else:
-            st.info("Enter measurements for Team Member 2 (P200, Water) to see calculations and plot.")
+        st.header("Corn Syrup Measurements")
+        st.warning("For corn syrup, carefully cut the very tip off your pipette tip to make a wider opening. Pipette slowly.")
+        pipette_practice_block(1, "P200", "Corn Syrup", corn_syrup_targets["P200"], cornsyrup_color, data)
+        pipette_practice_block(2, "P200", "Corn Syrup", corn_syrup_targets["P200"], cornsyrup_color, data)
+        pipette_practice_block(3, "P1000", "Corn Syrup", corn_syrup_targets["P1000"], cornsyrup_color, data)
 
-        st.markdown("---")
-
-        # P1000 Team Member 3 - Water
-        pipette_type_tm3 = "P1000"
-        st.subheader(f"P1000 Practice with Water - Team Member 3 - Target Volume: {int(water_targets[pipette_type_tm3] * 1000)} µL")
-        st.markdown(f"*(Expected weight: {water_targets[pipette_type_tm3]:.3f} g)*")
-        entries_water_p1000_tm3 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Water P1000 Entry {i} (g) - TM3", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"water_{pipette_type_tm3}_TM3_weight_{i}")
-            entries_water_p1000_tm3.append(weight)
-
-        non_default_entries_water_p1000_tm3 = np.array(entries_water_p1000_tm3)[np.array(entries_water_p1000_tm3) != 0.0]
-        if len(non_default_entries_water_p1000_tm3) > 0:
-            mean_weight = np.mean(non_default_entries_water_p1000_tm3)
-            std_weight = np.std(non_default_entries_water_p1000_tm3)
-            percent_error = (abs(mean_weight - water_targets[pipette_type_tm3]) / water_targets[pipette_type_tm3]) * 100
-            st.write(f"**Average measured weight (TM3):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM3):** {std_weight:.3f} g")
-            st.write(f"**Percent Error (TM3):** {percent_error:.2f}% {'✅ Excellent accuracy!' if percent_error <= 15.0 else '❌ Try again — review technique!'}")
-
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_water_p1000_tm3) + 1), non_default_entries_water_p1000_tm3, color='skyblue')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(water_targets[pipette_type_tm3], color='g', linestyle=':', label=f'Target ({water_targets[pipette_type_tm3]:.3f}g)')
-            ax.set_title(f"P1000 Weights (Water, TM3, Target {int(water_targets[pipette_type_tm3]*1000)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"water_{pipette_type_tm3}_TM3_mean"] = mean_weight
-            data[f"water_{pipette_type_tm3}_TM3_std"] = std_weight
-            data[f"water_{pipette_type_tm3}_TM3_percent_error"] = percent_error
-        else:
-            st.info("Enter measurements for Team Member 3 (P1000, Water) to see calculations and plot.")
-
-        st.markdown("---")
-
-        st.subheader("🍯 Corn Syrup Measurements")
-        st.warning("""
-        **Remember for Corn Syrup:** You will need to **carefully cut off the very tip of your pipette tip** to make a wider opening. This helps with the viscous solution! Pipette slowly.
-        """)
-
-        # P200 Team Member 1 - Corn Syrup
-        pipette_type_tm1_cs = "P200"
-        st.subheader(f"P200 Practice with Corn Syrup - Team Member 1 - Target Volume: {int(corn_syrup_targets[pipette_type_tm1_cs] * 1000 / 1.38)} µL (approx.)")
-        st.markdown(f"*(Expected weight: {corn_syrup_targets[pipette_type_tm1_cs]:.3f} g)*")
-        entries_corn_syrup_p200_tm1 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Corn Syrup P200 Entry {i} (g) - TM1", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"corn_syrup_{pipette_type_tm1_cs}_TM1_weight_{i}")
-            entries_corn_syrup_p200_tm1.append(weight)
-
-        non_default_entries_corn_syrup_p200_tm1 = np.array(entries_corn_syrup_p200_tm1)[np.array(entries_corn_syrup_p200_tm1) != 0.0]
-        if len(non_default_entries_corn_syrup_p200_tm1) > 0:
-            mean_weight = np.mean(non_default_entries_corn_syrup_p200_tm1)
-            std_weight = np.std(non_default_entries_corn_syrup_p200_tm1)
-            # Removed percent_error calculation for corn syrup
-            st.write(f"**Average measured weight (TM1):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM1):** {std_weight:.3f} g")
-
-            # Tiered feedback based on standard deviation
-            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
-                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
-            elif std_weight <= 0.020:
-                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
-            else:
-                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
-
-
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_corn_syrup_p200_tm1) + 1), non_default_entries_corn_syrup_p200_tm1, color='orange')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(corn_syrup_targets[pipette_type_tm1_cs], color='g', linestyle=':', label=f'Target ({corn_syrup_targets[pipette_type_tm1_cs]:.3f}g)')
-            ax.set_title(f"P200 Weights (Corn Syrup, TM1, Target {int(corn_syrup_targets[pipette_type_tm1_cs]*1000/1.38)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_mean"] = mean_weight
-            data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_std"] = std_weight
-            # data[f"corn_syrup_{pipette_type_tm1_cs}_TM1_percent_error"] = percent_error # Removed from data for CSV
-        else:
-            st.info("Enter measurements for Team Member 1 (P200, Corn Syrup) to see calculations and plot.")
-
-        st.markdown("---")
-
-        # P200 Team Member 2 - Corn Syrup
-        pipette_type_tm2_cs = "P200"
-        st.subheader(f"P200 Practice with Corn Syrup - Team Member 2 - Target Volume: {int(corn_syrup_targets[pipette_type_tm2_cs] * 1000 / 1.38)} µL (approx.)")
-        st.markdown(f"*(Expected weight: {corn_syrup_targets[pipette_type_tm2_cs]:.3f} g)*")
-        entries_corn_syrup_p200_tm2 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Corn Syrup P200 Entry {i} (g) - TM2", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"corn_syrup_{pipette_type_tm2_cs}_TM2_weight_{i}")
-            entries_corn_syrup_p200_tm2.append(weight)
-
-        non_default_entries_corn_syrup_p200_tm2 = np.array(entries_corn_syrup_p200_tm2)[np.array(entries_corn_syrup_p200_tm2) != 0.0]
-        if len(non_default_entries_corn_syrup_p200_tm2) > 0:
-            mean_weight = np.mean(non_default_entries_corn_syrup_p200_tm2)
-            std_weight = np.std(non_default_entries_corn_syrup_p200_tm2)
-            # Removed percent_error calculation for corn syrup
-            st.write(f"**Average measured weight (TM2):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM2):** {std_weight:.3f} g")
-
-            # Tiered feedback based on standard deviation
-            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
-                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
-            elif std_weight <= 0.020:
-                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
-            else:
-                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
-
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_corn_syrup_p200_tm2) + 1), non_default_entries_corn_syrup_p200_tm2, color='orange')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(corn_syrup_targets[pipette_type_tm2_cs], color='g', linestyle=':', label=f'Target ({corn_syrup_targets[pipette_type_tm2_cs]:.3f}g)')
-            ax.set_title(f"P200 Weights (Corn Syrup, TM2, Target {int(corn_syrup_targets[pipette_type_tm2_cs]*1000/1.38)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_mean"] = mean_weight
-            data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_std"] = std_weight
-            # data[f"corn_syrup_{pipette_type_tm2_cs}_TM2_percent_error"] = percent_error # Removed from data for CSV
-        else:
-            st.info("Enter measurements for Team Member 2 (P200, Corn Syrup) to see calculations and plot.")
-
-        st.markdown("---")
-
-        # P1000 Team Member 3 - Corn Syrup
-        pipette_type_tm3_cs = "P1000"
-        st.subheader(f"P1000 Practice with Corn Syrup - Team Member 3 - Target Volume: {int(corn_syrup_targets[pipette_type_tm3_cs] * 1000 / 1.38)} µL (approx.)")
-        st.markdown(f"*(Expected weight: {corn_syrup_targets[pipette_type_tm3_cs]:.3f} g)*")
-        entries_corn_syrup_p1000_tm3 = []
-        for i in range(1, 6):
-            weight = st.number_input(f"Corn Syrup P1000 Entry {i} (g) - TM3", min_value=0.0, max_value=2.0, step=0.001, format="%.3f", key=f"corn_syrup_{pipette_type_tm3_cs}_TM3_weight_{i}")
-            entries_corn_syrup_p1000_tm3.append(weight)
-
-        non_default_entries_corn_syrup_p1000_tm3 = np.array(entries_corn_syrup_p1000_tm3)[np.array(entries_corn_syrup_p1000_tm3) != 0.0]
-        if len(non_default_entries_corn_syrup_p1000_tm3) > 0:
-            mean_weight = np.mean(non_default_entries_corn_syrup_p1000_tm3)
-            std_weight = np.std(non_default_entries_corn_syrup_p1000_tm3)
-            # Removed percent_error calculation for corn syrup
-            st.write(f"**Average measured weight (TM3):** {mean_weight:.3f} g")
-            st.write(f"**Standard deviation (TM3):** {std_weight:.3f} g")
-
-            # Tiered feedback based on standard deviation
-            if std_weight <= 0.005: # Adjust these thresholds based on expected performance
-                st.success("Your standard deviation is **very low**, indicating outstanding consistency! ✨")
-            elif std_weight <= 0.020:
-                st.info("Your standard deviation shows **good consistency**. Keep practicing that slow, steady technique! 👍")
-            else:
-                st.warning("Your standard deviation is higher. Focus on maintaining a **consistent, slow speed** during aspiration and dispense with corn syrup. 🤔")
-
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.bar(range(1, len(non_default_entries_corn_syrup_p1000_tm3) + 1), non_default_entries_corn_syrup_p1000_tm3, color='orange')
-            ax.axhline(mean_weight, color='r', linestyle='--', label=f'Mean ({mean_weight:.3f}g)')
-            ax.axhline(corn_syrup_targets[pipette_type_tm3_cs], color='g', linestyle=':', label=f'Target ({corn_syrup_targets[pipette_type_tm3_cs]:.3f}g)')
-            ax.set_title(f"P1000 Weights (Corn Syrup, TM3, Target {int(corn_syrup_targets[pipette_type_tm3_cs]*1000/1.38)} µL)")
-            ax.set_xlabel("Trial Number")
-            ax.set_ylabel("Measured Weight (g)")
-            ax.set_ylim(bottom=0)
-            ax.legend()
-            ax.grid(axis='y', linestyle='--', alpha=0.7)
-            st.pyplot(fig)
-            plt.close(fig)
-            data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_mean"] = mean_weight
-            data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_std"] = std_weight
-            # data[f"corn_syrup_{pipette_type_tm3_cs}_TM3_percent_error"] = percent_error # Removed from data for CSV
-        else:
-            st.info("Enter measurements for Team Member 3 (P1000, Corn Syrup) to see calculations and plot.")
-
-        st.markdown("---")
-        st.subheader("Reflection")
+        st.header("Reflection")
         reflection1 = st.text_area("1. Why is pipetting accuracy important in biotechnology?")
-        reflection2 = st.text_area("2. Which pipette or solution was hardest to use accurately and why?")
+        reflection2 = st.text_area("2. Which pipette or solution was hardest to use accurately, and why?")
 
-        if st.button("🚀 Finish Practice!"):
-            st.success("✅ Great job completing your pipetting practice!")
-            st.balloons()
+        # Check how many practice blocks have data
+        blocks_filled = sum([
+            1 for key in [
+                "water_P200_TM1_mean", "water_P200_TM2_mean", "water_P1000_TM3_mean",
+                "corn_syrup_P200_TM1_mean", "corn_syrup_P200_TM2_mean", "corn_syrup_P1000_TM3_mean"
+            ] if key in data
+        ])
 
-            # Prepare DataFrame for CSV Export
-            results_data = []
+        st.markdown("---")
+        st.progress(blocks_filled / 6, text=f"{blocks_filled} of 6 practice blocks completed")
 
-            # Water Results (These still include Percent Error)
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P200 (TM1)",
-                "Liquid": "Water",
-                "Mean (g)": data.get("water_P200_TM1_mean", np.nan),
-                "Std Dev (g)": data.get("water_P200_TM1_std", np.nan),
-                "Percent Error": data.get("water_P200_TM1_percent_error", np.nan)
-            })
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P200 (TM2)",
-                "Liquid": "Water",
-                "Mean (g)": data.get("water_P200_TM2_mean", np.nan),
-                "Std Dev (g)": data.get("water_P200_TM2_std", np.nan),
-                "Percent Error": data.get("water_P200_TM2_percent_error", np.nan)
-            })
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P1000 (TM3)",
-                "Liquid": "Water",
-                "Mean (g)": data.get("water_P1000_TM3_mean", np.nan),
-                "Std Dev (g)": data.get("water_P1000_TM3_std", np.nan),
-                "Percent Error": data.get("water_P1000_TM3_percent_error", np.nan)
-            })
+        if st.button("Finish Practice"):
+            if blocks_filled < 6:
+                st.warning(f"You've completed {blocks_filled} of 6 practice blocks. Finish all six before downloading results.")
+            else:
+                st.success("Practice complete. Your results are ready to download below.")
 
-            # Corn Syrup Results (These now only include Mean and Std Dev)
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P200 (TM1)",
-                "Liquid": "Corn Syrup",
-                "Mean (g)": data.get("corn_syrup_P200_TM1_mean", np.nan),
-                "Std Dev (g)": data.get("corn_syrup_P200_TM1_std", np.nan),
-                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
-            })
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P200 (TM2)",
-                "Liquid": "Corn Syrup",
-                "Mean (g)": data.get("corn_syrup_P200_TM2_mean", np.nan),
-                "Std Dev (g)": data.get("corn_syrup_P200_TM2_std", np.nan),
-                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
-            })
-            results_data.append({
-                "Team Name": team_name,
-                "Pipette": "P1000 (TM3)",
-                "Liquid": "Corn Syrup",
-                "Mean (g)": data.get("corn_syrup_P1000_TM3_mean", np.nan),
-                "Std Dev (g)": data.get("corn_syrup_P1000_TM3_std", np.nan),
-                "Percent Error": np.nan # Explicitly set to NaN or remove if column not desired
-            })
+                results_data = []
+                for liquid_label, liquid_key in [("Water", "water"), ("Corn Syrup", "corn_syrup")]:
+                    for tm, pip in [(1, "P200"), (2, "P200"), (3, "P1000")]:
+                        prefix = f"{liquid_key}_{pip}_TM{tm}"
+                        results_data.append({
+                            "Team Name": team_name,
+                            "Pipette": f"{pip} (TM{tm})",
+                            "Liquid": liquid_label,
+                            "Mean (g)": data.get(f"{prefix}_mean", np.nan),
+                            "Std Dev (g)": data.get(f"{prefix}_std", np.nan),
+                            "Percent Error": data.get(f"{prefix}_percent_error", np.nan)
+                        })
 
-            results_df = pd.DataFrame(results_data)
+                results_df = pd.DataFrame(results_data)
+                st.dataframe(results_df, width="stretch")
 
-            st.markdown("---")
-            st.subheader("📁 Download Your Results")
-
-            csv = results_df.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                label="⬇️ Download CSV of Your Results",
-                data=csv,
-                file_name=f"pipetting_results_{team_name.replace(' ', '_')}.csv",
-                mime="text/csv"
-            )
+                csv = results_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    label="Download CSV of Your Results",
+                    data=csv,
+                    file_name=f"pipetting_results_{team_name.replace(' ', '_')}.csv",
+                    mime="text/csv"
+                )
 
 else:
-    st.warning("👆 Please enter your team name above to start.")
+    st.warning("Please enter your team name above to start.")
