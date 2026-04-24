@@ -7,6 +7,55 @@ import streamlit.components.v1 as components
 # --- CONFIG ---
 st.set_page_config(page_title="Buffs Biotech: Pipetting Masterclass", layout="wide")
 
+# --- BRANDED HEADER & STYLING ---
+st.markdown("""
+<style>
+.block-container {
+    padding-top: 2rem;
+}
+.cu-header {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    border-left: 6px solid #CFB87C;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    border-radius: 4px;
+}
+.cu-header h1 {
+    color: #CFB87C;
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+    font-size: 1.8rem;
+}
+.cu-header p {
+    color: #ffffff;
+    margin: 0.25rem 0 0 0;
+    opacity: 0.85;
+    font-size: 1rem;
+}
+h2, h3 {
+    color: #1a1a1a;
+    border-bottom: 2px solid #CFB87C;
+    padding-bottom: 0.25rem;
+}
+.stButton > button {
+    background-color: #CFB87C;
+    color: #000000;
+    border: none;
+    font-weight: 600;
+}
+.stButton > button:hover {
+    background-color: #b8a269;
+    color: #000000;
+}
+</style>
+
+<div class='cu-header'>
+    <h1>Buffs Biotech: Pipetting Masterclass</h1>
+    <p>CU Science Discovery · Engineering Biology with Polymers</p>
+</div>
+""", unsafe_allow_html=True)
+
 # --- STUDENT NAME ---
 team_name = st.text_input("Enter your team name to track your progress:")
 if team_name:
