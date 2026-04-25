@@ -142,13 +142,13 @@ if team_name:
         st.header("Introduction to Pipetting")
         st.markdown("""
 Micropipettes allow scientists to transfer tiny liquid volumes precisely — critical for every biotech lab.
-Today, you will learn **how to pipette accurately**, fix common mistakes, and test your skills.
+Today, you will learn how to pipette accurately, fix common mistakes, and test your skills.
 """)
 
     with tabs[1]:
         st.header("Parts of a Micropipette")
         st.markdown("""
-- **Plunger** (pushes and releases liquid)
+- **Plunger** (color coded push button that pushes and releases liquid)
 - **Volume adjustment dial**
 - **Volume display window**
 - **Tip ejector button**
@@ -157,7 +157,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
         st.info("Take a moment to locate each part on the actual micropipette at your bench.")
         col1, col2 = st.columns(2)
         with col1:
-            st.image("pipettor.png", caption="Labeled micropipette", use_container_width=True)
+            st.image("pipettor.png", caption="Labeled micropipette", width=400)
         with col2:
             st.image("pipette_box.png", use_container_width=True)
 
