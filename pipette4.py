@@ -162,7 +162,7 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
             st.markdown(
                 f"""
                 <div style="text-align: center;">
-                    <img src="data:image/png;base64,{_pipettor_b64}" style="width: 400px; max-width: 100%; height: auto;" />
+                    <img src="data:image/png;base64,{_pipettor_b64}" style="width: 500px; max-width: 100%; height: auto;" />
                     <div style="color: #555; font-size: 0.85rem; margin-top: 0.25rem;">Labeled micropipette</div>
                 </div>
                 """,
