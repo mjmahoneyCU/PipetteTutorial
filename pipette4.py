@@ -5,33 +5,13 @@ import matplotlib.pyplot as plt
 import streamlit.components.v1 as components
 
 # --- CONFIG ---
-st.set_page_config(page_title="Buffs Biotech: Pipetting Masterclass", layout="wide")
+st.set_page_config(page_title="Pipetting Tutorial", layout="wide")
 
-# --- BRANDED HEADER & STYLING ---
+# --- STYLING ---
 st.markdown("""
 <style>
 .block-container {
     padding-top: 2rem;
-}
-.cu-header {
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-    border-left: 6px solid #CFB87C;
-    padding: 1.5rem 2rem;
-    margin-bottom: 2rem;
-    border-radius: 4px;
-}
-.cu-header h1 {
-    color: #CFB87C;
-    margin: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 600;
-    font-size: 1.8rem;
-}
-.cu-header p {
-    color: #ffffff;
-    margin: 0.25rem 0 0 0;
-    opacity: 0.85;
-    font-size: 1rem;
 }
 h2, h3 {
     color: #1a1a1a;
@@ -49,12 +29,13 @@ h2, h3 {
     color: #000000;
 }
 </style>
-
-<div class='cu-header'>
-    <h1>Buffs Biotech: Pipetting Masterclass</h1>
-    <p>CU Science Discovery · Engineering Biology with Polymers</p>
-</div>
 """, unsafe_allow_html=True)
+
+# --- DEPARTMENT BANNER ---
+st.image("CBEN.png", use_container_width=True)
+
+# --- PAGE TITLE ---
+st.title("Pipetting Tutorial")
 
 
 # --- REUSABLE FUNCTION FOR PRACTICE BLOCKS ---
@@ -166,9 +147,9 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
         st.info("Take a moment to locate each part on the actual micropipette at your bench.")
         col1, col2 = st.columns(2)
         with col1:
-            st.image("pipettor.png", caption="Labeled micropipette", width="stretch")
+            st.image("pipettor.png", caption="Labeled micropipette", use_container_width=True)
         with col2:
-            st.image("pipette_box.png", width="stretch")
+            st.image("pipette_box.png", use_container_width=True)
 
     with tabs[2]:
         st.header("Setting the Volume")
@@ -180,7 +161,7 @@ Today, you will learn **how to pipette accurately**, fix common mistakes, and te
   - P1000: 100–1000 µL
 - Rotate slightly past your volume, then dial back for best accuracy.
 """)
-        st.image("pipette_volumes.png", caption="Pipette volume settings", width="stretch")
+        st.image("pipette_volumes.png", caption="Pipette volume settings", use_container_width=True)
 
         st.subheader("Match the Pipette Display to the Correct Volume")
         volume_options = ["Select", "2 µL", "10 µL", "20 µL", "80 µL", "100 µL", "200 µL", "800 µL"]
@@ -390,7 +371,7 @@ A small value means your pipetting is consistent from trial to trial. A large va
                         })
 
                 results_df = pd.DataFrame(results_data)
-                st.dataframe(results_df, width="stretch")
+                st.dataframe(results_df, use_container_width=True)
 
                 csv = results_df.to_csv(index=False).encode("utf-8")
                 st.download_button(
