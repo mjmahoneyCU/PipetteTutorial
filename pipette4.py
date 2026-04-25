@@ -32,7 +32,7 @@ h2, h3 {
 """, unsafe_allow_html=True)
 
 # --- DEPARTMENT BANNER ---
-st.image("CBEN.png", use_container_width=True)
+st.image("CBEN.png", width=400)
 
 # --- PAGE TITLE ---
 st.title("Pipetting Tutorial")
