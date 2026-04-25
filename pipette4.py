@@ -155,21 +155,17 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
 - **Shaft** (where the tip fits)
 """)
         st.info("Take a moment to locate each part on the actual micropipette at your bench.")
-        col1, col2 = st.columns(2)
-        with col1:
-            with open("pipettor.png", "rb") as _pipettor_file:
-                _pipettor_b64 = base64.b64encode(_pipettor_file.read()).decode()
-            st.markdown(
-                f"""
-                <div style="text-align: center;">
-                    <img src="data:image/png;base64,{_pipettor_b64}" style="width: 500px; max-width: 100%; height: auto;" />
-                    <div style="color: #555; font-size: 0.85rem; margin-top: 0.25rem;">Labeled micropipette</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with col2:
-            st.image("pipette_box.png", use_container_width=True)
+        with open("pipettor.png", "rb") as _pipettor_file:
+            _pipettor_b64 = base64.b64encode(_pipettor_file.read()).decode()
+        st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="data:image/png;base64,{_pipettor_b64}" style="width: 500px; max-width: 100%; height: auto;" />
+                <div style="color: #555; font-size: 0.85rem; margin-top: 0.25rem;">Labeled micropipette</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with tabs[2]:
         st.header("Setting the Volume")
@@ -217,7 +213,7 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
   - Blue for P1000
 - Listen for a soft 'click' to confirm attachment.
 
-**Now practice adding tips to your pipettes at your bench.**
+Now practice adding tips to your pipettes at your bench.
 """)
         with col2:
             video_id = "CJWCM9kM-YE"
@@ -233,11 +229,11 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
-- Press the plunger to the **first stop**.
+- Press the plunger to the first stop.
 - Insert the tip just 2–3 mm below the liquid surface.
 - Release the plunger slowly to draw liquid without bubbles.
 
-**Practice drawing up liquid into your pipette. Watch for bubbles.**
+Practice drawing up liquid into your pipette. Watch for bubbles.
 """)
         with col2:
             video_id = "TAsEXBQZqzo"
@@ -260,11 +256,11 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
-- Press gently to the **first stop**.
-- Press to the **second stop** to eject the final drop.
+- Press gently to the first stop.
+- Press to the second stop to eject the final drop.
 - Remove the tip while still pressing down.
 
-**Practice dispensing the liquid you just drew up.**
+Practice dispensing the liquid you just drew up.
 """)
         with col2:
             video_id = "tF6XdJbuHZY"
@@ -286,10 +282,10 @@ Today, you will learn how to pipette accurately, fix common mistakes, and test y
         st.header("Handling Viscous Solutions")
         st.markdown("""
 - Pre-wet the tip before aspirating.
-- Aspirate and dispense **slowly**.
+- Aspirate and dispense slowly.
 - Be patient — viscous liquids move slower than water.
 
-**Try pipetting the corn syrup you've been provided. Be slow and steady.**
+Try pipetting the corn syrup you've been provided. Be slow and steady.
 """)
         answer4 = st.radio("When pipetting viscous liquids, should you pipette faster or slower?",
                            ["Faster", "Slower"], index=None, key="viscous_check")
