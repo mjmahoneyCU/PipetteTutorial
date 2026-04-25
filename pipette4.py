@@ -135,7 +135,7 @@ if team_name:
     tabs = st.tabs([
         "Introduction", "Pipette Anatomy", "Setting Volume", "Attaching Tips",
         "Drawing Liquid", "Dispensing", "Viscous Solutions", "Common Errors",
-        "Practice & Reflection"
+        "Practice"
     ])
 
     with tabs[0]:
@@ -304,7 +304,7 @@ Try pipetting the corn syrup you've been provided. Be slow and steady.
 """)
 
     with tabs[8]:
-        st.header("Practice Challenge + Reflection")
+        st.header("Practice")
 
         with st.expander("Converting Volume to Weight (reference)"):
             st.markdown("""
@@ -351,10 +351,6 @@ A small value means your pipetting is consistent from trial to trial. A large va
         pipette_practice_block(1, "P200", "Corn Syrup", corn_syrup_targets["P200"], cornsyrup_color, data)
         pipette_practice_block(2, "P200", "Corn Syrup", corn_syrup_targets["P200"], cornsyrup_color, data)
         pipette_practice_block(3, "P1000", "Corn Syrup", corn_syrup_targets["P1000"], cornsyrup_color, data)
-
-        st.header("Reflection")
-        reflection1 = st.text_area("1. Why is pipetting accuracy important in biotechnology?")
-        reflection2 = st.text_area("2. Which pipette or solution was hardest to use accurately, and why?")
 
         # Check how many practice blocks have data
         blocks_filled = sum([
