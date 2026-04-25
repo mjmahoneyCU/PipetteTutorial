@@ -32,7 +32,17 @@ h2, h3 {
 """, unsafe_allow_html=True)
 
 # --- DEPARTMENT BANNER ---
-st.image("CBEN.png", width=400)
+import base64
+with open("CBEN.png", "rb") as _banner_file:
+    _banner_b64 = base64.b64encode(_banner_file.read()).decode()
+st.markdown(
+    f"""
+    <div style="background-color: #000000; padding: 0.5rem 1.5rem; margin-bottom: 1rem; border-radius: 4px;">
+        <img src="data:image/png;base64,{_banner_b64}" style="height: 80px; display: block;" />
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # --- PAGE TITLE ---
 st.title("Pipetting Tutorial")
