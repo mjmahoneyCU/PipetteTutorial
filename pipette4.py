@@ -54,7 +54,7 @@ def pipette_practice_block(team_member, pipette_type, liquid, target_grams, bar_
     if liquid == "Water":
         target_uL = int(target_grams * 1000)
     else:
-        target_uL = int(target_grams * 1000 / 1.38)
+        target_uL = int(target_grams * 1000 / 1.26)
 
     st.subheader(f"{pipette_type} Practice with {liquid} — Team Member {team_member}")
     st.caption(f"Target volume: {target_uL} µL  |  Expected weight: {target_grams:.3f} g")
@@ -310,13 +310,13 @@ Try pipetting the corn syrup you've been provided. Be slow and steady.
             st.markdown("""
 **Water** has a density of **1 g/mL**, which is the same as **1 mg/µL**. So 1 µL of water weighs about 1 mg (0.001 g).
 
-**Corn syrup** has a density of approximately **1.38 g/mL** (or 1.38 mg/µL).
+**Corn syrup** has a density of approximately **1.26 g/mL** (or 1.26 mg/µL).
 
 | Volume | Water weight | Corn syrup weight |
 |---|---|---|
 | 10 µL | 0.010 g | 0.014 g |
-| 100 µL | 0.100 g | 0.138 g |
-| 1000 µL | 1.000 g | 1.380 g |
+| 100 µL | 0.100 g | 0.12 g |
+| 1000 µL | 1.000 g | 1.26 g |
 """)
 
         with st.expander("Understanding Your Results"):
@@ -338,7 +338,7 @@ A small value means your pipetting is consistent from trial to trial. A large va
         water_color = "#4A90E2"
         cornsyrup_color = "#CFB87C"
         water_targets = {"P200": 0.100, "P1000": 1.000}
-        corn_syrup_targets = {"P200": 0.138, "P1000": 1.380}
+        corn_syrup_targets = {"P200": 0.12, "P1000": 1.260}
         data = {}
 
         st.header("Water Measurements")
